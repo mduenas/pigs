@@ -83,8 +83,8 @@ class GameViewModel(
         processAction(GameAction.NewGame)
     }
     
-    fun scorePosition(position: ScoringPosition, customPoints: Int = 0) {
-        processAction(GameAction.Score(position, customPoints))
+    fun scorePig(position: ScoringPosition) {
+        processAction(GameAction.ScorePig(position))
     }
     
     fun bankPoints() {

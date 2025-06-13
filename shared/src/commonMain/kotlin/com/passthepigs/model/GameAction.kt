@@ -9,7 +9,7 @@ sealed class GameAction {
     object StartGame : GameAction()
     object NewGame : GameAction()
     
-    data class Score(val position: ScoringPosition, val customPoints: Int = 0) : GameAction()
+    data class ScorePig(val position: ScoringPosition) : GameAction()
     object BankPoints : GameAction()
     object UndoLastRoll : GameAction()
 }

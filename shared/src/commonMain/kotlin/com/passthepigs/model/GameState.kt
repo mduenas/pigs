@@ -4,6 +4,7 @@ data class GameState(
     val players: List<Player> = emptyList(),
     val currentPlayerIndex: Int = 0,
     val currentTurnScore: Int = 0,
+    val currentTurnState: TurnState = TurnState(),
     val gameStarted: Boolean = false,
     val gameEnded: Boolean = false,
     val winner: Player? = null,

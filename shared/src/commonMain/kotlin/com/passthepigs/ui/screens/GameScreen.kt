@@ -22,7 +22,6 @@ import com.passthepigs.model.GameState
 import com.passthepigs.model.ScoringPosition
 import com.passthepigs.ui.components.PlayerCard
 import com.passthepigs.ui.components.ScoringButton
-import com.passthepigs.ui.components.MixedScoreDialog
 import com.passthepigs.ui.theme.PassThePigsColors
 
 @Composable
@@ -32,7 +31,6 @@ fun GameScreen(
     onNavigateToSetup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showMixedScoreDialog by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -55,13 +53,7 @@ fun GameScreen(
         if (gameState.gameStarted && !gameState.gameEnded) {
             ScoringSection(
                 gameState = gameState,
-                onScore = { position -> 
-                    if (position == ScoringPosition.MIXED) {
-                        showMixedScoreDialog = true
-                    } else {
-                        viewModel.scorePosition(position)
-                    }
-                },
+                onScore = { position -> viewModel.scorePig(position) },
                 onBankPoints = { viewModel.bankPoints() },
                 onUndo = { viewModel.undoLastRoll() },
                 modifier = Modifier.weight(1f)
@@ -73,17 +65,6 @@ fun GameScreen(
                 modifier = Modifier.weight(1f)
             )
         }
-    }
-    
-    // Mixed score dialog
-    if (showMixedScoreDialog) {
-        MixedScoreDialog(
-            onScore = { points ->
-                viewModel.scorePosition(ScoringPosition.MIXED, points)
-                showMixedScoreDialog = false
-            },
-            onDismiss = { showMixedScoreDialog = false }
-        )
     }
 }
 
@@ -175,6 +156,46 @@ private fun ScoringSection(
                     fontWeight = FontWeight.Bold,
                     color = PassThePigsColors.Primary
                 )
+                
+                // Pig roll status
+                val turnState = gameState.currentTurnState
+                val pigStatus = when {
+                    turnState.isComplete -> "Turn Complete"
+                    turnState.currentPigNumber == 1 -> "Enter Pig 1 of 2"
+                    turnState.currentPigNumber == 2 -> "Enter Pig 2 of 2"
+                    else -> ""
+                }
+                
+                Text(
+                    text = pigStatus,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PassThePigsColors.OnBackground
+                )
+                
+                // Show current pig rolls
+                if (turnState.pig1 != null || turnState.pig2 != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        turnState.pig1?.let { pig1 ->
+                            Text(
+                                text = "Pig 1: ${pig1.position.displayName} (${pig1.points})",
+                                fontSize = 12.sp,
+                                color = PassThePigsColors.OnBackground
+                            )
+                        }
+                        turnState.pig2?.let { pig2 ->
+                            Text(
+                                text = "Pig 2: ${pig2.position.displayName} (${pig2.points})",
+                                fontSize = 12.sp,
+                                color = PassThePigsColors.OnBackground
+                            )
+                        }
+                    }
+                }
+                
                 if (gameState.currentTurnScore > 0) {
                     Text(
                         text = "Turn Score: ${gameState.currentTurnScore}",
@@ -209,7 +230,7 @@ private fun ScoringSection(
         ) {
             Button(
                 onClick = onUndo,
-                enabled = gameState.currentTurnScore > 0,
+                enabled = gameState.currentTurnState.pig1 != null || gameState.currentTurnState.pig2 != null,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PassThePigsColors.NeutralScore
@@ -220,7 +241,7 @@ private fun ScoringSection(
             
             Button(
                 onClick = onBankPoints,
-                enabled = gameState.currentTurnScore > 0,
+                enabled = gameState.currentTurnState.isComplete && gameState.currentTurnScore > 0,
                 modifier = Modifier.weight(2f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PassThePigsColors.PositiveScore
@@ -289,14 +310,11 @@ private fun GameEndedSection(
 
 private fun getScoringPositions(): List<ScoringPosition> {
     return listOf(
+        ScoringPosition.SIDER,
         ScoringPosition.TROTTER,
         ScoringPosition.RAZORBACK,
         ScoringPosition.SNOUTER,
         ScoringPosition.LEANING_JOWLER,
-        ScoringPosition.DOUBLE_TROTTER,
-        ScoringPosition.DOUBLE_SNOUTER,
-        ScoringPosition.DOUBLE_LEANING_JOWLER,
-        ScoringPosition.MIXED,
         ScoringPosition.PIG_OUT,
         ScoringPosition.OINKER,
         ScoringPosition.PIGGYBACK
