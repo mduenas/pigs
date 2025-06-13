@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.passthepigs.game.GameViewModel
 import com.passthepigs.model.GameState
+import com.passthepigs.model.PigPair
 import com.passthepigs.model.ScoringPosition
 import com.passthepigs.ui.components.PlayerCard
 import com.passthepigs.ui.components.ScoringButton
@@ -55,6 +56,7 @@ fun GameScreen(
                 gameState = gameState,
                 onScore = { position -> viewModel.scorePig(position) },
                 onBankPoints = { viewModel.bankPoints() },
+                onRollAgain = { viewModel.rollAgain() },
                 onUndo = { viewModel.undoLastRoll() },
                 modifier = Modifier.weight(1f)
             )
@@ -80,7 +82,7 @@ private fun GameHeader(
     ) {
         Column {
             Text(
-                text = "Pass the Pigs",
+                text = "Pigs Tally",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = PassThePigsColors.Primary
@@ -132,6 +134,7 @@ private fun ScoringSection(
     gameState: GameState,
     onScore: (ScoringPosition) -> Unit,
     onBankPoints: () -> Unit,
+    onRollAgain: () -> Unit,
     onUndo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -139,70 +142,158 @@ private fun ScoringSection(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Current player and turn score
-        Card(
+        // Two-column layout for turn state and pig rolls
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = PassThePigsColors.Primary.copy(alpha = 0.1f)
-            )
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // First column: Turn state
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(
+                    containerColor = PassThePigsColors.Primary.copy(alpha = 0.1f)
+                )
             ) {
-                Text(
-                    text = "${gameState.currentPlayer?.name}'s Turn",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PassThePigsColors.Primary
-                )
-                
-                // Pig roll status
-                val turnState = gameState.currentTurnState
-                val pigStatus = when {
-                    turnState.isComplete -> "Turn Complete"
-                    turnState.currentPigNumber == 1 -> "Enter Pig 1 of 2"
-                    turnState.currentPigNumber == 2 -> "Enter Pig 2 of 2"
-                    else -> ""
-                }
-                
-                Text(
-                    text = pigStatus,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PassThePigsColors.OnBackground
-                )
-                
-                // Show current pig rolls
-                if (turnState.pig1 != null || turnState.pig2 != null) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        turnState.pig1?.let { pig1 ->
-                            Text(
-                                text = "Pig 1: ${pig1.position.displayName} (${pig1.points})",
-                                fontSize = 12.sp,
-                                color = PassThePigsColors.OnBackground
-                            )
-                        }
-                        turnState.pig2?.let { pig2 ->
-                            Text(
-                                text = "Pig 2: ${pig2.position.displayName} (${pig2.points})",
-                                fontSize = 12.sp,
-                                color = PassThePigsColors.OnBackground
-                            )
-                        }
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${gameState.currentPlayer?.name}'s Turn",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PassThePigsColors.Primary,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    // Pig roll status
+                    val turnState = gameState.currentTurnState
+                    val pigStatus = when {
+                        turnState.canRollAgain -> "Bank or roll again?"
+                        turnState.hasPenalty -> "Penalty! Turn ends"
+                        turnState.currentPigNumber == 1 -> "Enter Pig 1 of 2"
+                        turnState.currentPigNumber == 2 -> "Enter Pig 2 of 2"
+                        else -> ""
+                    }
+                    
+                    Text(
+                        text = pigStatus,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PassThePigsColors.OnBackground,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    if (gameState.currentTurnScore > 0) {
+                        Text(
+                            text = "Turn Score: ${gameState.currentTurnScore}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = PassThePigsColors.PositiveScore,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
-                
-                if (gameState.currentTurnScore > 0) {
+            }
+            
+            // Second column: Current pig rolls
+            Card(
+                modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(
+                    containerColor = PassThePigsColors.Primary.copy(alpha = 0.1f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "Turn Score: ${gameState.currentTurnScore}",
+                        text = "Pig Rolls",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = PassThePigsColors.PositiveScore
+                        fontWeight = FontWeight.Bold,
+                        color = PassThePigsColors.Primary,
+                        textAlign = TextAlign.Center
                     )
+                    
+                    val turnState = gameState.currentTurnState
+                    if (turnState.allRolls.isNotEmpty()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            // Show completed pairs count if any
+                            if (turnState.completedPairs.isNotEmpty()) {
+                                Text(
+                                    text = "Completed: ${turnState.completedPairs.size} ${if (turnState.completedPairs.size == 1) "pair" else "pairs"}",
+                                    fontSize = 12.sp,
+                                    color = PassThePigsColors.PositiveScore,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            
+                            // Show current roll with score
+                            if (turnState.currentPig1 != null || turnState.currentPig2 != null) {
+                                val currentScore = (turnState.currentPig1?.points ?: 0) + (turnState.currentPig2?.points ?: 0)
+                                val currentPairBonus = if (turnState.hasCurrentPair) {
+                                    val currentPair = PigPair(turnState.currentPig1!!, turnState.currentPig2!!)
+                                    currentPair.getDoubleBonus()
+                                } else 0
+                                val totalCurrentScore = currentScore + currentPairBonus
+                                
+                                Text(
+                                    text = "Current: ${totalCurrentScore} pts",
+                                    fontSize = 14.sp,
+                                    color = PassThePigsColors.Primary,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                
+                                // Show individual pig details
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                ) {
+                                    turnState.currentPig1?.let { pig1 ->
+                                        Text(
+                                            text = "Pig 1: ${pig1.position.displayName} (${pig1.points})",
+                                            fontSize = 11.sp,
+                                            color = PassThePigsColors.OnBackground,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                    turnState.currentPig2?.let { pig2 ->
+                                        Text(
+                                            text = "Pig 2: ${pig2.position.displayName} (${pig2.points})",
+                                            fontSize = 11.sp,
+                                            color = PassThePigsColors.OnBackground,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                                
+                                if (currentPairBonus > 0) {
+                                    Text(
+                                        text = "(includes +${currentPairBonus} double bonus)",
+                                        fontSize = 10.sp,
+                                        color = PassThePigsColors.PositiveScore,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No rolls yet",
+                            fontSize = 12.sp,
+                            color = PassThePigsColors.OnBackground.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }
@@ -218,36 +309,79 @@ private fun ScoringSection(
                 ScoringButton(
                     position = position,
                     onScore = onScore,
-                    enabled = !gameState.gameEnded
+                    enabled = !gameState.gameEnded && !gameState.currentTurnState.canRollAgain
                 )
             }
         }
         
         // Action buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = onUndo,
-                enabled = gameState.currentTurnState.pig1 != null || gameState.currentTurnState.pig2 != null,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PassThePigsColors.NeutralScore
-                )
+        val turnState = gameState.currentTurnState
+        if (turnState.canRollAgain) {
+            // Show bank and roll again options
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Undo")
+                Button(
+                    onClick = onUndo,
+                    enabled = turnState.allRolls.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Undo")
+                }
+                
+                Button(
+                    onClick = onBankPoints,
+                    enabled = gameState.currentTurnScore > 0,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PassThePigsColors.PositiveScore
+                    )
+                ) {
+                    Text("Bank")
+                }
+                
+                Button(
+                    onClick = onRollAgain,
+                    enabled = true,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PassThePigsColors.Primary
+                    )
+                ) {
+                    Text("Roll Again")
+                }
             }
-            
-            Button(
-                onClick = onBankPoints,
-                enabled = gameState.currentTurnState.isComplete && gameState.currentTurnScore > 0,
-                modifier = Modifier.weight(2f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PassThePigsColors.PositiveScore
-                )
+        } else {
+            // Show normal action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Bank Points")
+                Button(
+                    onClick = onUndo,
+                    enabled = turnState.allRolls.isNotEmpty(),
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text("Undo")
+                }
+                
+                Button(
+                    onClick = onBankPoints,
+                    enabled = turnState.currentPairComplete && gameState.currentTurnScore > 0 && !turnState.hasPenalty,
+                    modifier = Modifier.weight(2f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PassThePigsColors.PositiveScore
+                    )
+                ) {
+                    Text("Bank Points")
+                }
             }
         }
     }
@@ -310,6 +444,7 @@ private fun GameEndedSection(
 
 private fun getScoringPositions(): List<ScoringPosition> {
     return listOf(
+        ScoringPosition.DOT,
         ScoringPosition.SIDER,
         ScoringPosition.TROTTER,
         ScoringPosition.RAZORBACK,

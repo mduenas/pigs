@@ -5,47 +5,27 @@ data class PigRoll(
     val points: Int = position.points
 )
 
-data class TurnState(
-    val pig1: PigRoll? = null,
-    val pig2: PigRoll? = null,
-    val isComplete: Boolean = false
+data class PigPair(
+    val pig1: PigRoll,
+    val pig2: PigRoll
 ) {
-    val currentPigNumber: Int
-        get() = when {
-            pig1 == null -> 1
-            pig2 == null -> 2
-            else -> 0 // Turn complete
-        }
-    
     val totalPoints: Int
-        get() = (pig1?.points ?: 0) + (pig2?.points ?: 0)
+        get() = pig1.points + pig2.points
     
     val hasPenalty: Boolean
-        get() = pig1?.position?.isPenalty == true || pig2?.position?.isPenalty == true || 
-                (pig1?.position == ScoringPosition.SIDER && pig2?.position == ScoringPosition.SIDER)
+        get() = pig1.position.isPenalty || pig2.position.isPenalty || 
+                (pig1.position == ScoringPosition.SIDER && pig2.position == ScoringPosition.SIDER)
     
     val penaltyType: ScoringPosition?
         get() = when {
-            // Check for explicit penalty positions first
-            pig1?.position?.isPenalty == true -> pig1.position
-            pig2?.position?.isPenalty == true -> pig2.position
-            // Check for pig out (both siders)
-            pig1?.position == ScoringPosition.SIDER && pig2?.position == ScoringPosition.SIDER -> ScoringPosition.PIG_OUT
+            pig1.position.isPenalty -> pig1.position
+            pig2.position.isPenalty -> pig2.position
+            pig1.position == ScoringPosition.SIDER && pig2.position == ScoringPosition.SIDER -> ScoringPosition.PIG_OUT
             else -> null
         }
     
-    private fun arePigsTouching(): Boolean {
-        // For now, we'll consider OINKER as a special case that needs to be explicitly selected
-        return pig1?.position == ScoringPosition.OINKER || pig2?.position == ScoringPosition.OINKER
-    }
-    
-    private fun isPiggyback(): Boolean {
-        // For now, we'll consider PIGGYBACK as a special case that needs to be explicitly selected
-        return pig1?.position == ScoringPosition.PIGGYBACK || pig2?.position == ScoringPosition.PIGGYBACK
-    }
-    
     fun getDoubleBonus(): Int {
-        return if (pig1?.position == pig2?.position && pig1?.position?.isPositive == true) {
+        return if (pig1.position == pig2.position && pig1.position.isPositive) {
             when (pig1.position) {
                 ScoringPosition.TROTTER -> 10 // 20 total (5+5+10 bonus)
                 ScoringPosition.SNOUTER -> 20 // 40 total (10+10+20 bonus)
@@ -57,4 +37,65 @@ data class TurnState(
     
     val finalPoints: Int
         get() = if (hasPenalty) 0 else totalPoints + getDoubleBonus()
+}
+
+data class TurnState(
+    val completedPairs: List<PigPair> = emptyList(),
+    val currentPig1: PigRoll? = null,
+    val currentPig2: PigRoll? = null,
+    val canContinueRolling: Boolean = true
+) {
+    val currentPigNumber: Int
+        get() = when {
+            currentPig1 == null -> 1
+            currentPig2 == null -> 2
+            else -> 0 // Current pair complete
+        }
+    
+    val hasCurrentPair: Boolean
+        get() = currentPig1 != null && currentPig2 != null
+    
+    val currentPairComplete: Boolean
+        get() = hasCurrentPair
+    
+    val totalTurnPoints: Int
+        get() {
+            val completedPoints = completedPairs.sumOf { it.finalPoints }
+            val currentPoints = if (hasCurrentPair) {
+                val currentPair = PigPair(currentPig1!!, currentPig2!!)
+                currentPair.finalPoints
+            } else {
+                (currentPig1?.points ?: 0) + (currentPig2?.points ?: 0)
+            }
+            return completedPoints + currentPoints
+        }
+    
+    val hasPenalty: Boolean
+        get() = hasCurrentPair && PigPair(currentPig1!!, currentPig2!!).hasPenalty
+    
+    val penaltyType: ScoringPosition?
+        get() = if (hasCurrentPair) PigPair(currentPig1!!, currentPig2!!).penaltyType else null
+    
+    val canRollAgain: Boolean
+        get() = hasCurrentPair && !hasPenalty && canContinueRolling
+    
+    fun addCurrentPairToCompleted(): TurnState {
+        return if (hasCurrentPair) {
+            val newPair = PigPair(currentPig1!!, currentPig2!!)
+            copy(
+                completedPairs = completedPairs + newPair,
+                currentPig1 = null,
+                currentPig2 = null
+            )
+        } else {
+            this
+        }
+    }
+    
+    val allRolls: List<PigRoll>
+        get() {
+            val completed = completedPairs.flatMap { listOf(it.pig1, it.pig2) }
+            val current = listOfNotNull(currentPig1, currentPig2)
+            return completed + current
+        }
 }

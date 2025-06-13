@@ -2,6 +2,7 @@ package com.passthepigs.model
 
 enum class ScoringPosition(val displayName: String, val points: Int, val isPenalty: Boolean = false) {
     // Single pig positions
+    DOT("Dot Sider", 1),
     SIDER("Sider", 0),
     TROTTER("Trotter", 5),
     RAZORBACK("Razorback", 5),

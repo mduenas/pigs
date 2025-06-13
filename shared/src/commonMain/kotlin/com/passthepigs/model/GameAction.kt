@@ -11,5 +11,6 @@ sealed class GameAction {
     
     data class ScorePig(val position: ScoringPosition) : GameAction()
     object BankPoints : GameAction()
+    object RollAgain : GameAction()
     object UndoLastRoll : GameAction()
 }

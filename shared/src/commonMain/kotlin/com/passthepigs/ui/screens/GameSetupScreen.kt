@@ -120,7 +120,7 @@ private fun SetupHeader() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Pass the Pigs",
+            text = "Pigs Tally",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = PassThePigsColors.Primary

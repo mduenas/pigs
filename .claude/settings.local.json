@@ -5,7 +5,8 @@
       "Bash(chmod:*)",
       "Bash(gradle build)",
       "Bash(gradle:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(./gradlew:*)"
     ],
     "deny": []
   }

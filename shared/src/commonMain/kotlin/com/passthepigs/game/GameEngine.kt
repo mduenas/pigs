@@ -16,6 +16,7 @@ class GameEngine {
             
             is GameAction.ScorePig -> processScorePig(currentState, action.position)
             GameAction.BankPoints -> bankPoints(currentState)
+            GameAction.RollAgain -> rollAgain(currentState)
             GameAction.UndoLastRoll -> undoLastRoll(currentState)
         }
     }
@@ -73,39 +74,44 @@ class GameEngine {
     
     private fun processScorePig(state: GameState, position: ScoringPosition): GameState {
         if (!state.gameStarted || state.gameEnded) return state
-        if (state.currentTurnState.isComplete) return state
         
         val currentTurnState = state.currentTurnState
         val pigRoll = PigRoll(position)
         
         val newTurnState = when (currentTurnState.currentPigNumber) {
-            1 -> currentTurnState.copy(pig1 = pigRoll)
-            2 -> currentTurnState.copy(pig2 = pigRoll, isComplete = true)
+            1 -> currentTurnState.copy(currentPig1 = pigRoll)
+            2 -> currentTurnState.copy(currentPig2 = pigRoll)
             else -> currentTurnState // Should not happen
         }
         
-        val newState = state.copy(currentTurnState = newTurnState)
+        val newState = state.copy(
+            currentTurnState = newTurnState,
+            currentTurnScore = newTurnState.totalTurnPoints
+        )
         
-        // If turn is complete, process the results
-        return if (newTurnState.isComplete) {
-            processTurnComplete(newState)
+        // If current pair is complete, check for penalties
+        return if (newTurnState.currentPairComplete) {
+            if (newTurnState.hasPenalty) {
+                processPenaltyTurn(newState, newTurnState)
+            } else {
+                newState // Player can choose to bank or roll again
+            }
         } else {
             newState
         }
     }
     
-    private fun processTurnComplete(state: GameState): GameState {
+    fun rollAgain(state: GameState): GameState {
+        if (!state.gameStarted || state.gameEnded) return state
         val turnState = state.currentTurnState
-        val currentPlayer = state.currentPlayer ?: return state
+        if (!turnState.canRollAgain) return state
         
-        return when {
-            turnState.hasPenalty -> processPenaltyTurn(state, turnState)
-            else -> {
-                // Add points to current turn score
-                val newTurnScore = state.currentTurnScore + turnState.finalPoints
-                state.copy(currentTurnScore = newTurnScore)
-            }
-        }
+        // Move current pair to completed pairs and reset for next roll
+        val newTurnState = turnState.addCurrentPairToCompleted()
+        return state.copy(
+            currentTurnState = newTurnState,
+            currentTurnScore = newTurnState.totalTurnPoints
+        )
     }
     
     private fun processPenaltyTurn(state: GameState, turnState: TurnState): GameState {
@@ -156,10 +162,21 @@ class GameEngine {
     
     private fun bankPoints(state: GameState): GameState {
         if (!state.gameStarted || state.gameEnded || state.currentTurnScore == 0) return state
-        if (!state.currentTurnState.isComplete) return state // Must complete both pig rolls
+        
+        val turnState = state.currentTurnState
+        if (!turnState.currentPairComplete && turnState.completedPairs.isEmpty()) return state
         
         val currentPlayer = state.currentPlayer ?: return state
-        val newTotalScore = currentPlayer.totalScore + state.currentTurnScore
+        
+        // Add current pair to completed if exists
+        val finalTurnState = if (turnState.currentPairComplete && !turnState.hasPenalty) {
+            turnState.addCurrentPairToCompleted()
+        } else {
+            turnState
+        }
+        
+        val finalTurnScore = finalTurnState.totalTurnPoints
+        val newTotalScore = currentPlayer.totalScore + finalTurnScore
         
         val updatedPlayers = state.players.map { player ->
             if (player.id == currentPlayer.id) {
@@ -219,15 +236,30 @@ class GameEngine {
     private fun undoLastRoll(state: GameState): GameState {
         val currentTurnState = state.currentTurnState
         return when {
-            currentTurnState.pig2 != null -> {
+            currentTurnState.currentPig2 != null -> {
                 // Remove second pig roll
-                state.copy(currentTurnState = currentTurnState.copy(pig2 = null, isComplete = false))
-            }
-            currentTurnState.pig1 != null -> {
-                // Remove first pig roll and reset turn score
+                val newTurnState = currentTurnState.copy(currentPig2 = null)
                 state.copy(
-                    currentTurnState = TurnState(),
-                    currentTurnScore = 0
+                    currentTurnState = newTurnState,
+                    currentTurnScore = newTurnState.totalTurnPoints
+                )
+            }
+            currentTurnState.currentPig1 != null -> {
+                // Remove first pig roll
+                val newTurnState = currentTurnState.copy(currentPig1 = null)
+                state.copy(
+                    currentTurnState = newTurnState,
+                    currentTurnScore = newTurnState.totalTurnPoints
+                )
+            }
+            currentTurnState.completedPairs.isNotEmpty() -> {
+                // Remove last completed pair
+                val newTurnState = currentTurnState.copy(
+                    completedPairs = currentTurnState.completedPairs.dropLast(1)
+                )
+                state.copy(
+                    currentTurnState = newTurnState,
+                    currentTurnScore = newTurnState.totalTurnPoints
                 )
             }
             else -> state // Nothing to undo

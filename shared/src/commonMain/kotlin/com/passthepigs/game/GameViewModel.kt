@@ -91,6 +91,10 @@ class GameViewModel(
         processAction(GameAction.BankPoints)
     }
     
+    fun rollAgain() {
+        processAction(GameAction.RollAgain)
+    }
+    
     fun undoLastRoll() {
         processAction(GameAction.UndoLastRoll)
     }
