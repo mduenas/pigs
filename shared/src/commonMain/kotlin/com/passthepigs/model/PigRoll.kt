@@ -10,24 +10,50 @@ data class PigPair(
     val pig2: PigRoll
 ) {
     val totalPoints: Int
-        get() = pig1.points + pig2.points
+        get() {
+            // Handle sider combinations specially
+            return when {
+                isSiderCombination() -> siderPoints()
+                else -> pig1.points + pig2.points
+            }
+        }
     
     val hasPenalty: Boolean
-        get() = pig1.position.isPenalty || pig2.position.isPenalty || 
-                (pig1.position == ScoringPosition.SIDER && pig2.position == ScoringPosition.SIDER)
+        get() = pig1.position.isPenalty || pig2.position.isPenalty || isPigOut()
     
     val penaltyType: ScoringPosition?
         get() = when {
             pig1.position.isPenalty -> pig1.position
             pig2.position.isPenalty -> pig2.position
-            pig1.position == ScoringPosition.SIDER && pig2.position == ScoringPosition.SIDER -> ScoringPosition.PIG_OUT
+            isPigOut() -> ScoringPosition.PIG_OUT
             else -> null
         }
+    
+    private fun isSiderCombination(): Boolean {
+        return pig1.position.isSide && pig2.position.isSide
+    }
+    
+    private fun isPigOut(): Boolean {
+        // Pig Out when pigs land on opposite sides (one dot up, one dot down)
+        return (pig1.position == ScoringPosition.DOT_UP && pig2.position == ScoringPosition.DOT_DOWN) ||
+               (pig1.position == ScoringPosition.DOT_DOWN && pig2.position == ScoringPosition.DOT_UP)
+    }
+    
+    private fun siderPoints(): Int {
+        return when {
+            isPigOut() -> 0 // Opposite sides = Pig Out
+            // Same sides (both dot up OR both dot down) = 1 point
+            (pig1.position == ScoringPosition.DOT_UP && pig2.position == ScoringPosition.DOT_UP) ||
+            (pig1.position == ScoringPosition.DOT_DOWN && pig2.position == ScoringPosition.DOT_DOWN) -> 1
+            else -> 0
+        }
+    }
     
     fun getDoubleBonus(): Int {
         return if (pig1.position == pig2.position && pig1.position.isPositive) {
             when (pig1.position) {
                 ScoringPosition.TROTTER -> 10 // 20 total (5+5+10 bonus)
+                ScoringPosition.RAZORBACK -> 10 // 20 total (5+5+10 bonus)
                 ScoringPosition.SNOUTER -> 20 // 40 total (10+10+20 bonus)
                 ScoringPosition.LEANING_JOWLER -> 30 // 60 total (15+15+30 bonus)
                 else -> 0

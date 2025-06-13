@@ -89,7 +89,12 @@ class GameEngine {
             currentTurnScore = newTurnState.totalTurnPoints
         )
         
-        // If current pair is complete, check for penalties
+        // Check for immediate penalties (Oinker, Piggyback) that end turn right away
+        if (position.isPenalty && position != ScoringPosition.PIG_OUT) {
+            return processImmediatePenalty(newState, position)
+        }
+        
+        // If current pair is complete, check for other penalties
         return if (newTurnState.currentPairComplete) {
             if (newTurnState.hasPenalty) {
                 processPenaltyTurn(newState, newTurnState)
@@ -112,6 +117,47 @@ class GameEngine {
             currentTurnState = newTurnState,
             currentTurnScore = newTurnState.totalTurnPoints
         )
+    }
+    
+    private fun processImmediatePenalty(state: GameState, penaltyType: ScoringPosition): GameState {
+        val currentPlayer = state.currentPlayer ?: return state
+        
+        return when (penaltyType) {
+            ScoringPosition.OINKER -> {
+                // Reset total score to 0, advance to next player
+                val updatedPlayers = state.players.map { player ->
+                    if (player.id == currentPlayer.id) {
+                        player.copy(totalScore = 0)
+                    } else {
+                        player
+                    }
+                }
+                advanceToNextPlayer(
+                    state.copy(
+                        players = updatedPlayers,
+                        currentTurnScore = 0,
+                        currentTurnState = TurnState()
+                    )
+                )
+            }
+            ScoringPosition.PIGGYBACK -> {
+                // Eliminate player, advance to next player
+                val updatedPlayers = state.players.map { player ->
+                    if (player.id == currentPlayer.id) {
+                        player.copy(isEliminated = true)
+                    } else {
+                        player
+                    }
+                }
+                val newState = state.copy(
+                    players = updatedPlayers, 
+                    currentTurnScore = 0,
+                    currentTurnState = TurnState()
+                )
+                advanceToNextPlayer(newState)
+            }
+            else -> state
+        }
     }
     
     private fun processPenaltyTurn(state: GameState, turnState: TurnState): GameState {

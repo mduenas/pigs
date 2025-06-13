@@ -60,21 +60,20 @@ fun ScoringButton(
                     textAlign = TextAlign.Center,
                     maxLines = 2
                 )
-                if (position.points != 0 || position.isPenalty) {
-                    Text(
-                        text = when {
-                            position.isPenalty -> when (position) {
-                                ScoringPosition.PIG_OUT -> "Lose Turn"
-                                ScoringPosition.OINKER -> "Score → 0"
-                                ScoringPosition.PIGGYBACK -> "Eliminated"
-                                else -> "Penalty"
-                            }
-                            else -> "${position.points} pts"
-                        },
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Text(
+                    text = when {
+                        position.isPenalty -> when (position) {
+                            ScoringPosition.PIG_OUT -> "Lose Turn"
+                            ScoringPosition.OINKER -> "Score → 0"
+                            ScoringPosition.PIGGYBACK -> "Eliminated"
+                            else -> "Penalty"
+                        }
+                        position == ScoringPosition.DOT_UP || position == ScoringPosition.DOT_DOWN -> "1 pt"
+                        else -> "${position.points} pts"
+                    },
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

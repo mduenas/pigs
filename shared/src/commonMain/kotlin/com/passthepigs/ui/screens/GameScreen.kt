@@ -453,13 +453,12 @@ private fun GameEndedSection(
 
 private fun getScoringPositions(): List<ScoringPosition> {
     return listOf(
-        ScoringPosition.DOT,
-        ScoringPosition.SIDER,
+        ScoringPosition.DOT_UP,
+        ScoringPosition.DOT_DOWN,
         ScoringPosition.TROTTER,
         ScoringPosition.RAZORBACK,
         ScoringPosition.SNOUTER,
         ScoringPosition.LEANING_JOWLER,
-        ScoringPosition.PIG_OUT,
         ScoringPosition.OINKER,
         ScoringPosition.PIGGYBACK
     )
