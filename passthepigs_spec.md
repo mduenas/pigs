@@ -4,32 +4,39 @@
 A Kotlin Multiplatform Compose (KMP) mobile application for keeping score in the classic dice game "Pass the Pigs". The app provides an intuitive scoring interface with easily identifiable buttons and smart user management.
 
 ## Game Background
-Pass the Pigs is a dice game where players take turns rolling two plastic pig-shaped dice. Players score points based on how the pigs land and must decide whether to continue rolling (risking their turn score) or bank their points and pass to the next player. First player to reach 100 points wins.
+Pass the Pigs is a dice game where players take turns rolling two plastic pig-shaped dice. Players score points based on how the pigs land and must decide whether to continue rolling (risking their turn score) or bank their points and pass to the next player. 
+
+The key mechanic is that after rolling two pigs, players can choose to:
+- **Bank their points**: Add turn score to total and pass to next player
+- **Roll again**: Risk their current turn score for a chance at more points
+
+Penalties can occur that either end the turn (Pig Out), reset total score (Oinker), or eliminate the player (Piggyback). Double bonuses are awarded when both pigs land in identical positions. First player to reach 100 points wins.
 
 ## Core Features
 
 ### 1. Scoring System
 The app must support all official Pass the Pigs scoring positions:
 
-#### Single Pig Positions:
-- **Sider**: 0 points (used for combinations)
-- **Trotter**: 5 points (pig on all four feet)
-- **Razorback**: 5 points (pig on back, legs up)
-- **Snouter**: 10 points (pig on snout and front legs)
-- **Leaning Jowler**: 15 points (pig on jowl, ear, and front foot)
+#### Basic Combinations:
+- **Sider**: Both pigs land on the same side (both spot up or both spot down) - 1 point
+- **Pig Out**: Pigs land on opposite sides (one spot up, one spot down) - 0 points, turn ends
+- **Trotter**: One pig stands on all four feet, the other on its side - 5 points
+- **Razorback**: One pig lands on its back, the other on its side - 5 points
+- **Snouter**: One pig balances on its snout and two front feet, the other on its side - 10 points
+- **Leaning Jowler**: One pig balances on snout, ear, and one foot, the other on its side - 15 points
 
 #### Double Positions (both pigs same):
-- **Double Trotter**: 20 points
-- **Double Snouter**: 40 points
-- **Double Leaning Jowler**: 60 points
+- **Double Trotter**: Both pigs stand on all four feet - 20 points
+- **Double Razorback**: Both pigs land on their backs - 20 points
+- **Double Snouter**: Both pigs balance on snout and two front feet - 40 points
+- **Double Leaning Jowler**: Both pigs balance on snout, ear, and one foot - 60 points
 
 #### Mixed Combinations:
-- Add individual scores when pigs land in different positions
+- **Mixed Combo**: Any mix of Trotter, Razorback, Snouter, or Leaning Jowler - Sum of individual scores
 
 #### Penalty Positions:
-- **Pig Out**: Both pigs on opposite sides - lose turn score
-- **Oinker/Makin' Bacon**: Both pigs touching - total game score reset to 0
-- **Piggyback**: One pig on top of other - player eliminated
+- **Oinker**: Pigs touch each other in any position - Lose all accumulated points
+- **Piggyback**: One pig lands on top of the other, not touching the table - Player eliminated from the game
 
 ### 2. User Interface Design
 
@@ -48,15 +55,14 @@ The app must support all official Pass the Pigs scoring positions:
   - "New Game" - Reset all scores
   - "Undo Last Roll" - Reverse last scoring action
 
-#### Scoring Button Layout:
+#### Scoring Button Layout (3x3 Grid):
 ```
-[Trotter: 5pts]  [Razorback: 5pts]  [Snouter: 10pts]
-[Double Trotter: 20pts]  [Leaning Jowler: 15pts]
-[Double Snouter: 40pts]  [Double Leaning Jowler: 60pts]
-[Mixed Score: Custom Input]
+[Dot Sider: 1pt]     [Sider: 0pts]       [Trotter: 5pts]
+[Razorback: 5pts]    [Snouter: 10pts]    [Leaning Jowler: 15pts]
+[Pig Out: Turn Ends] [Oinker: Score→0]   [Piggyback: Eliminated]
+```
 
-[Pig Out]  [Oinker]  [Piggyback]
-```
+Note: Double bonuses (Double Trotter: 20pts, Double Razorback: 20pts, Double Snouter: 40pts, Double Leaning Jowler: 60pts) are automatically calculated when both pigs land in the same position. Mixed combinations automatically sum individual scores.
 
 ### 3. Player Management
 
