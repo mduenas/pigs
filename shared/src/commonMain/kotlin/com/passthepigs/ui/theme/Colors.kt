@@ -20,6 +20,7 @@ object PassThePigsColors {
     val PositiveScore = Color(0xFF4CAF50) // Green
     val NegativeScore = Color(0xFFF44336) // Red
     val NeutralScore = Color(0xFF9E9E9E) // Gray
+    val SpecialScore = Color(0xFFFFC107) // Amber
     
     // Player colors
     val Player1 = Color(0xFF2196F3) // Blue

@@ -156,6 +156,7 @@ private fun GameInfoCard(playersCount: Int) {
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
                 text = "• Roll pigs to score points\n• First to 100 points wins\n• Bank points or risk losing your turn\n• Avoid penalties that can eliminate you!",
                 fontSize = 14.sp,
                 color = PassThePigsColors.OnBackground,

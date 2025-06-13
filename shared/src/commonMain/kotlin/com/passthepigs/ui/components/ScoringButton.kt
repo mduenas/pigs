@@ -24,13 +24,13 @@ fun ScoringButton(
     val buttonColor = when {
         position.isPenalty -> PassThePigsColors.NegativeScore
         position.points > 0 -> PassThePigsColors.PositiveScore
-        else -> PassThePigsColors.NeutralScore
+        else -> PassThePigsColors.SpecialScore
     }
     
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(72.dp),
+            .aspectRatio(1.2f),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = buttonColor.copy(alpha = if (enabled) 1f else 0.5f)

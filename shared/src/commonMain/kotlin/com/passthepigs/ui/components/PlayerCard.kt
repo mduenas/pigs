@@ -74,14 +74,14 @@ fun PlayerCard(
             Spacer(modifier = Modifier.height(4.dp))
             
             // Turn score (if current player)
-            if (isCurrentPlayer && currentTurnScore > 0) {
-                Text(
-                    text = "Turn: +$currentTurnScore",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PassThePigsColors.PositiveScore
-                )
-            }
+//            if (isCurrentPlayer && currentTurnScore > 0) {
+//                Text(
+//                    text = "Turn: +$currentTurnScore",
+//                    fontSize = 14.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    color = PassThePigsColors.PositiveScore
+//                )
+//            }
             
             // Status indicators
             when {
