@@ -2,6 +2,7 @@ package com.passthepigs.game
 
 import com.passthepigs.model.*
 import com.passthepigs.storage.GameStateStorage
+import com.passthepigs.storage.PreferencesStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.launch
 
 class GameViewModel(
     private val storage: GameStateStorage? = null,
+    private val preferencesStorage: PreferencesStorage? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
 ) {
     private val gameEngine = GameEngine()
@@ -25,8 +27,12 @@ class GameViewModel(
     )
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
     
+    private val _preferences = MutableStateFlow(GamePreferences.DEFAULT)
+    val preferences: StateFlow<GamePreferences> = _preferences.asStateFlow()
+    
     init {
         loadGameState()
+        loadPreferences()
     }
     
     fun processAction(action: GameAction) {
@@ -63,6 +69,31 @@ class GameViewModel(
         }
     }
     
+    private fun loadPreferences() {
+        preferencesStorage?.let { storage ->
+            scope.launch {
+                try {
+                    val savedPreferences = storage.loadPreferences()
+                    _preferences.value = savedPreferences
+                } catch (e: Exception) {
+                    // Ignore load errors, use defaults
+                }
+            }
+        }
+    }
+    
+    private fun savePreferences() {
+        preferencesStorage?.let { storage ->
+            scope.launch {
+                try {
+                    storage.savePreferences(_preferences.value)
+                } catch (e: Exception) {
+                    // Ignore save errors
+                }
+            }
+        }
+    }
+    
     fun addPlayer(name: String = "") {
         processAction(GameAction.AddPlayer(name))
     }
@@ -80,7 +111,18 @@ class GameViewModel(
     }
     
     fun newGame() {
-        processAction(GameAction.NewGame)
+        val prefs = _preferences.value
+        val players = (1..prefs.defaultPlayerCount).map { Player.createDefault(it) }
+        _gameState.value = GameState(
+            players = players,
+            winningScore = prefs.winningScore
+        )
+        saveGameState()
+    }
+    
+    fun updatePreferences(newPreferences: GamePreferences) {
+        _preferences.value = newPreferences
+        savePreferences()
     }
     
     fun scorePig(position: ScoringPosition) {

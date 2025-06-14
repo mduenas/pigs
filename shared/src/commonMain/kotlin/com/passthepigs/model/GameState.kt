@@ -8,7 +8,8 @@ data class GameState(
     val gameStarted: Boolean = false,
     val gameEnded: Boolean = false,
     val winner: Player? = null,
-    val roundNumber: Int = 1
+    val roundNumber: Int = 1,
+    val winningScore: Int = 100
 ) {
     val currentPlayer: Player?
         get() = players.getOrNull(currentPlayerIndex)

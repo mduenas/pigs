@@ -239,7 +239,7 @@ class GameEngine {
         )
         
         // Check for winner
-        val winner = updatedPlayers.find { it.totalScore >= 100 && !it.isEliminated }
+        val winner = updatedPlayers.find { it.totalScore >= state.winningScore && !it.isEliminated }
         if (winner != null) {
             return newState.copy(
                 gameEnded = true,

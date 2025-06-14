@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,7 @@ fun GameScreen(
     gameState: GameState,
     viewModel: GameViewModel,
     onNavigateToSetup: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -41,7 +44,8 @@ fun GameScreen(
         // Game header
         GameHeader(
             gameState = gameState,
-            onNewGame = { viewModel.newGame(); onNavigateToSetup() }
+            onNewGame = { viewModel.newGame(); onNavigateToSetup() },
+            onNavigateToSettings = onNavigateToSettings
         )
         
         // Players display
@@ -73,7 +77,8 @@ fun GameScreen(
 @Composable
 private fun GameHeader(
     gameState: GameState,
-    onNewGame: () -> Unit
+    onNewGame: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -89,20 +94,35 @@ private fun GameHeader(
             )
             if (gameState.gameStarted) {
                 Text(
-                    text = "Round ${gameState.roundNumber}",
+                    text = "Round ${gameState.roundNumber} • Target: ${gameState.winningScore}",
                     fontSize = 14.sp,
                     color = PassThePigsColors.OnBackground
                 )
             }
         }
         
-        Button(
-            onClick = onNewGame,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PassThePigsColors.Primary
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("New Game")
+            IconButton(
+                onClick = onNavigateToSettings
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = PassThePigsColors.Primary
+                )
+            }
+            
+            Button(
+                onClick = onNewGame,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PassThePigsColors.Primary
+                )
+            ) {
+                Text("New Game")
+            }
         }
     }
 }
