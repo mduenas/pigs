@@ -149,7 +149,7 @@ tasks.register("iosRunQuick") {
             isIgnoreExitValue = true
         }
         
-        // Build and run
+        // Build app
         exec {
             workingDir(file("iosApp"))
             commandLine(
@@ -161,11 +161,36 @@ tasks.register("iosRunQuick") {
             )
         }
         
+        // Install app to simulator
+        val appPath = file("${System.getProperty("user.home")}/Library/Developer/Xcode/DerivedData").listFiles()
+            ?.find { it.name.startsWith("iosApp-") }
+            ?.resolve("Build/Products/Debug-iphonesimulator/iosApp.app")
+        
+        if (appPath?.exists() == true) {
+            try {
+                exec {
+                    commandLine("xcrun", "simctl", "uninstall", "E650E5F0-F569-4AF7-A298-661705E456E1", "com.markduenas.pigstally")
+                    isIgnoreExitValue = true
+                }
+                exec {
+                    commandLine("xcrun", "simctl", "install", "E650E5F0-F569-4AF7-A298-661705E456E1", appPath.absolutePath)
+                }
+                exec {
+                    commandLine("xcrun", "simctl", "launch", "E650E5F0-F569-4AF7-A298-661705E456E1", "com.markduenas.pigstally")
+                }
+                println("📱 App installed and launched successfully")
+            } catch (e: Exception) {
+                println("⚠️ App built but installation failed: ${e.message}")
+            }
+        } else {
+            println("⚠️ App bundle not found - app built but not installed")
+        }
+        
         exec {
             commandLine("open", "-a", "Simulator")
         }
         
-        println("🚀 iOS app built and simulator launched")
+        println("🚀 iOS app process completed")
     }
 }
 
