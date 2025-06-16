@@ -36,7 +36,7 @@ Since there's no iOS app project yet, you need to create one:
 1. **Open Xcode**
 2. **Create New Project** → **iOS** → **App**
 3. **Product Name**: "Pigs Tally"
-4. **Bundle Identifier**: "com.passthepigs"
+4. **Bundle Identifier**: "com.markduenas.pigstally"
 5. **Language**: Swift
 6. **Interface**: SwiftUI
 
@@ -136,7 +136,7 @@ struct iOSApp: App {
 3. Press **⌘+R** to build and run
 
 ### Using Command Line:
-```bash
+```bash[iOS_DEVELOPMENT.md](iOS_DEVELOPMENT.md)
 # Build for simulator
 xcodebuild -project iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16' build
 

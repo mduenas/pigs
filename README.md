@@ -72,7 +72,7 @@ For full iOS app, open in Xcode and build the iOS target.
 PassThePigs/
 ├── shared/                     # Shared KMP module
 │   ├── src/commonMain/
-│   │   ├── kotlin/com/passthepigs/
+│   │   ├── kotlin/com/markduenas/pigstally/
 │   │   │   ├── model/         # Data models
 │   │   │   ├── game/          # Game logic and ViewModel
 │   │   │   ├── ui/            # Compose UI components

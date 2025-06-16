@@ -28,7 +28,7 @@ kotlin {
             freeCompilerArgs += listOf(
                 "-Xbinary=memoryModel=experimental",
                 "-Xbinary=freezing=disabled",
-                "-Xbinary=bundleId=com.passthepigs.shared"
+                "-Xbinary=bundleId=com.markduenas.pigstally.shared"
             )
             
             // Configure debug symbol handling
@@ -59,7 +59,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.passthepigs.shared"
+    namespace = "com.markduenas.pigstally.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

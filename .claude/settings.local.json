@@ -11,7 +11,10 @@
       "Bash(/usr/bin/gradle :composeApp:linkDebugFrameworkIosSimulatorArm64)",
       "Bash(java:*)",
       "Bash(./create_ios_project.sh:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)",
+      "Bash(true)"
     ],
     "deny": []
   }
