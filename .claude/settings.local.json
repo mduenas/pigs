@@ -6,7 +6,10 @@
       "Bash(gradle build)",
       "Bash(gradle:*)",
       "Bash(ls:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(find:*)",
+      "Bash(/usr/bin/gradle :composeApp:linkDebugFrameworkIosSimulatorArm64)",
+      "Bash(java:*)"
     ],
     "deny": []
   }
