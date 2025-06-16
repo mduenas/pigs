@@ -138,12 +138,12 @@ struct iOSApp: App {
 ### Using Command Line:
 ```bash
 # Build for simulator
-xcodebuild -project iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -project iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16' build
 
 # Run on simulator
-xcrun simctl boot "iPhone 15"
-xcrun simctl install booted path/to/app
-xcrun simctl launch booted com.passthepigs
+xcrun simctl boot "iPhone 16"
+xcrun simctl install booted /Users/markduenas/Library/Developer/Xcode/DerivedData/iosApp-arbligzseibmfhgtxixtsbchwcuf/Build/Products/Debug-iphonesimulator/iosApp.app
+xcrun simctl launch booted com.markduenas.pigstally
 ```
 
 ## Troubleshooting

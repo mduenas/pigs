@@ -23,6 +23,21 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            
+            // Configure memory model and threading
+            freeCompilerArgs += listOf(
+                "-Xbinary=memoryModel=experimental",
+                "-Xbinary=freezing=disabled",
+                "-Xbinary=bundleId=com.passthepigs.ComposeApp"
+            )
+            
+            // Configure debug symbol handling
+            if (buildType == org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG) {
+                debuggable = true
+            } else {
+                debuggable = false
+                freeCompilerArgs += listOf("-Xstrip-debug-info")
+            }
         }
     }
     
